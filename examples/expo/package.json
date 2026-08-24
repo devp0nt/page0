@@ -1,6 +1,6 @@
 {
   "name": "@point0/example-expo",
-  "version": "0.3.14",
+  "version": "0.4.0",
   "private": true,
   "main": "expo-router/entry",
   "scripts": {
@@ -16,10 +16,10 @@
   "dependencies": {
     "@babel/core": "^7.29.7",
     "@babel/plugin-transform-flow-strip-types": "^7.29.7",
-    "@point0/compiler": "^0.3.14",
-    "@point0/core": "^0.3.14",
-    "@point0/cors": "^0.3.14",
-    "@point0/engine": "^0.3.14",
+    "@point0/compiler": "^0.4.0",
+    "@point0/core": "^0.4.0",
+    "@point0/cors": "^0.4.0",
+    "@point0/engine": "^0.4.0",
     "@prisma/adapter-libsql": "^7.9.1",
     "@prisma/client": "^7.9.1",
     "expo": "~57.0.9",

@@ -5,6 +5,8 @@ release` promotes that section to the new version.
 
 ## Unreleased
 
+## 0.4.0 — 2026-08-24
+
 - **Navigation guards: ask before a client navigation runs.** A guard is asked
   before anything happens — no prefetch, no transition state, no history write
   until it answers — and may be async, so it can show a dialog and resolve with

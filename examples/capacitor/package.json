@@ -1,6 +1,6 @@
 {
   "name": "@point0/example-capacitor",
-  "version": "0.3.14",
+  "version": "0.4.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -24,10 +24,10 @@
   "dependencies": {
     "@1gr14/error0": "^0.4.8",
     "@1gr14/route0": "^0.3.0",
-    "@point0/compiler": "^0.3.14",
-    "@point0/core": "^0.3.14",
-    "@point0/engine": "^0.3.14",
-    "@point0/react-dom": "^0.3.14",
+    "@point0/compiler": "^0.4.0",
+    "@point0/core": "^0.4.0",
+    "@point0/engine": "^0.4.0",
+    "@point0/react-dom": "^0.4.0",
     "@capacitor/core": "^8.5.0",
     "@prisma/adapter-libsql": "^7.9.1",
     "@prisma/client": "^7.9.1",

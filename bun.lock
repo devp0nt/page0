@@ -35,7 +35,7 @@
     },
     "examples/basic": {
       "name": "@point0/example-basic",
-      "version": "0.3.14",
+      "version": "0.4.0",
       "dependencies": {
         "@1gr14/error0": "^0.4.8",
         "@1gr14/flat": "^0.1.4",
@@ -81,7 +81,7 @@
     },
     "examples/better-auth": {
       "name": "@point0/example-better-auth",
-      "version": "0.3.14",
+      "version": "0.4.0",
       "dependencies": {
         "@1gr14/error0": "^0.4.8",
         "@1gr14/flat": "^0.1.4",
@@ -127,7 +127,7 @@
     },
     "examples/capacitor": {
       "name": "@point0/example-capacitor",
-      "version": "0.3.14",
+      "version": "0.4.0",
       "dependencies": {
         "@1gr14/error0": "^0.4.8",
         "@1gr14/route0": "^0.3.0",
@@ -161,7 +161,7 @@
     },
     "examples/expo": {
       "name": "@point0/example-expo",
-      "version": "0.3.14",
+      "version": "0.4.0",
       "dependencies": {
         "@babel/core": "^7.29.7",
         "@babel/plugin-transform-flow-strip-types": "^7.29.7",
@@ -191,7 +191,7 @@
     },
     "examples/socket": {
       "name": "@point0/example-socket",
-      "version": "0.3.14",
+      "version": "0.4.0",
       "dependencies": {
         "@1gr14/error0": "^0.4.8",
         "@1gr14/flat": "^0.1.4",
@@ -238,7 +238,7 @@
     },
     "examples/vite": {
       "name": "@point0/example-vite",
-      "version": "0.3.14",
+      "version": "0.4.0",
       "dependencies": {
         "@1gr14/error0": "^0.4.8",
         "@1gr14/flat": "^0.1.4",
@@ -289,7 +289,7 @@
     },
     "packages/basic-auth": {
       "name": "@point0/basic-auth",
-      "version": "0.3.14",
+      "version": "0.4.0",
       "devDependencies": {
         "@scalar/types": "^0.17.0",
         "@types/bun": "^1.4.0",
@@ -305,7 +305,7 @@
     },
     "packages/cache-control": {
       "name": "@point0/cache-control",
-      "version": "0.3.14",
+      "version": "0.4.0",
       "devDependencies": {
         "@types/bun": "^1.4.0",
         "@types/node": "^26.1.2",
@@ -320,7 +320,7 @@
     },
     "packages/compiler": {
       "name": "@point0/compiler",
-      "version": "0.3.14",
+      "version": "0.4.0",
       "dependencies": {
         "@babel/core": "^7.29.7",
         "@babel/generator": "^7.29.8",
@@ -363,7 +363,7 @@
     },
     "packages/compress": {
       "name": "@point0/compress",
-      "version": "0.3.14",
+      "version": "0.4.0",
       "devDependencies": {
         "@types/bun": "^1.4.0",
         "@types/node": "^26.1.2",
@@ -378,7 +378,7 @@
     },
     "packages/core": {
       "name": "@point0/core",
-      "version": "0.3.14",
+      "version": "0.4.0",
       "dependencies": {
         "@standard-schema/spec": "^1.1.0",
         "safe-stable-stringify": "^2.5.0",
@@ -434,7 +434,7 @@
     },
     "packages/cors": {
       "name": "@point0/cors",
-      "version": "0.3.14",
+      "version": "0.4.0",
       "devDependencies": {
         "@types/bun": "^1.4.0",
         "@types/node": "^26.1.2",
@@ -449,7 +449,7 @@
     },
     "packages/create-app": {
       "name": "create-point0-app",
-      "version": "0.3.14",
+      "version": "0.4.0",
       "bin": {
         "create-point0-app": "dist/index.js",
       },
@@ -468,7 +468,7 @@
     },
     "packages/create-app/template": {
       "name": "my-app",
-      "version": "0.3.14",
+      "version": "0.4.0",
       "dependencies": {
         "@1gr14/error0": "^0.4.8",
         "@1gr14/flat": "^0.1.4",
@@ -523,7 +523,7 @@
     },
     "packages/docs": {
       "name": "@point0/docs",
-      "version": "0.3.14",
+      "version": "0.4.0",
       "bin": {
         "point0-docs-mcp": "dist/mcp.js",
       },
@@ -545,7 +545,7 @@
     },
     "packages/engine": {
       "name": "@point0/engine",
-      "version": "0.3.14",
+      "version": "0.4.0",
       "bin": {
         "point0": "dist/cli.js",
         "point0-project-mcp": "dist/mcp.js",
@@ -613,7 +613,7 @@
     },
     "packages/engine/tests/templates/one-client": {
       "name": "@point0/test-one-client",
-      "version": "0.3.14",
+      "version": "0.4.0",
       "dependencies": {
         "@1gr14/route0": "^0.3.0",
         "@point0/compiler": "^0.3.12",
@@ -641,7 +641,7 @@
     },
     "packages/engine/tests/templates/two-clients": {
       "name": "@point0/test-two-clients",
-      "version": "0.3.14",
+      "version": "0.4.0",
       "dependencies": {
         "@1gr14/route0": "^0.3.0",
         "@point0/compiler": "^0.3.12",
@@ -669,7 +669,7 @@
     },
     "packages/openapi": {
       "name": "@point0/openapi",
-      "version": "0.3.14",
+      "version": "0.4.0",
       "devDependencies": {
         "@point0/basic-auth": "^0.3.12",
         "@scalar/types": "^0.17.0",
@@ -692,10 +692,10 @@
     },
     "packages/react-dom": {
       "name": "@point0/react-dom",
-      "version": "0.3.14",
+      "version": "0.4.0",
       "devDependencies": {
         "@1gr14/route0": "^0.3.0",
-        "@point0/core": "^0.3.14",
+        "@point0/core": "^0.4.0",
         "@types/bun": "^1.4.0",
         "@types/node": "^26.1.2",
         "@types/react": "^19.2.18",
@@ -709,7 +709,7 @@
       },
       "peerDependencies": {
         "@1gr14/route0": "^0.3.0",
-        "@point0/core": "^0.3.14",
+        "@point0/core": "^0.4.0",
         "@types/react": "^19.2.18",
         "@types/react-dom": "^19.2.4",
         "react": "^19.2.8",

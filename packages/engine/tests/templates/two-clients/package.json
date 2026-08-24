@@ -1,6 +1,6 @@
 {
   "name": "@point0/test-two-clients",
-  "version": "0.3.14",
+  "version": "0.4.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -13,11 +13,11 @@
   },
   "dependencies": {
     "@1gr14/route0": "^0.3.0",
-    "@point0/compiler": "^0.3.14",
-    "@point0/core": "^0.3.14",
-    "@point0/cors": "^0.3.14",
-    "@point0/engine": "^0.3.14",
-    "@point0/react-dom": "^0.3.14",
+    "@point0/compiler": "^0.4.0",
+    "@point0/core": "^0.4.0",
+    "@point0/cors": "^0.4.0",
+    "@point0/engine": "^0.4.0",
+    "@point0/react-dom": "^0.4.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "server-only": "^0.0.1",
