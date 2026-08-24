@@ -261,6 +261,8 @@ export const POINT0_ERROR_CODES = [
   // client chunks / deploy invalidation (@point0/core)
   'POINT0_PAGE_CHUNK_LOAD_FAILED',
   'POINT0_STALE_CLIENT_BUILD',
+  // navigation (@point0/core)
+  'POINT0_NAVIGATION_BLOCKED', // a navigation guard answered `false` — an expected interruption, not a failure
   // fetch / execute (@point0/engine)
   'POINT0_INPUT_PARSE_FAILED',
   'POINT0_POINT_NOT_FOUND',

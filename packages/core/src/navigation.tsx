@@ -385,6 +385,7 @@ export type NavigationHelpersContextValue<
   openExternal: OpenExternalFn
   scrollToHash: ScrollToHashPolicy
   stale: StalePolicy
+  guard: NavigationGuard | undefined
 }
 export const NavigationHelpersContext = singletonize(
   'NavigationHelpersContext',
@@ -454,6 +455,7 @@ export type NavigationContextProviderProps<
   openExternal?: OpenExternalFn
   scrollToHash?: ScrollToHashPolicy
   stale?: StalePolicy
+  guard?: NavigationGuard
 }
 
 export function NavigationContextProvider<
@@ -473,6 +475,7 @@ export function NavigationContextProvider<
   openExternal = defaultOpenExternal,
   scrollToHash = true,
   stale = 'navigate',
+  guard,
 }: NavigationContextProviderProps<TRoutes, TAdapterNavigateFn, TErrorClass>) {
   const [nextLocation, setNextLocation] = useState<AnyLocation | null>(null)
   const [prevLocation, setPrevLocation] = useState<AnyLocation | null>(null)
@@ -511,6 +514,7 @@ export function NavigationContextProvider<
       openExternal,
       scrollToHash,
       stale,
+      guard,
     }),
     [
       ssrLocation,
@@ -521,6 +525,7 @@ export function NavigationContextProvider<
       openExternal,
       scrollToHash,
       stale,
+      guard,
     ],
   )
   useEffectAsap(() => {
@@ -770,6 +775,75 @@ export const useIsNavigating = (): boolean => {
   return isNavigating
 }
 
+export type NavigationGuardProps = {
+  /** Where the navigation leaves from. */
+  from: AnyLocation
+  /** Where it wants to land, already resolved against `from`. */
+  to: AnyLocation
+}
+export type NavigationGuard = (props: NavigationGuardProps) => boolean | Promise<boolean>
+
+const navigationGuards = new Set<NavigationGuard>()
+
+/**
+ * Register a guard every client navigation must pass before anything else happens — no prefetch, no transition state,
+ * no history write until it answers. Guards run in registration order (after the instance `guard` of
+ * `createNavigation`, when one is set) and may be async: the navigation awaits each one, so a guard is free to show a
+ * dialog and resolve with the user's answer. The first `false` blocks the navigation, answered like the other
+ * didn't-navigate outcomes — a `POINT0_NAVIGATION_BLOCKED`-coded error in the awaited result, never a thrown one.
+ * Returns the unregister function; in React prefer {@link useNavigationGuard}, which ties the registration to the
+ * component's lifetime.
+ *
+ * What guards never see: `setSearch` (a "soft" URL update outside the navigation pipeline), browser back/forward (on
+ * `popstate` the URL has already changed by the time anyone learns of it), and full unloads — cover leaving the
+ * document with a `beforeunload` listener. Full reference: https://1gr14.dev/point0/latest/navigation
+ */
+export const registerNavigationGuard = (guard: NavigationGuard): (() => void) => {
+  navigationGuards.add(guard)
+  return () => {
+    navigationGuards.delete(guard)
+  }
+}
+
+/**
+ * {@link registerNavigationGuard} tied to the component's lifetime. The latest render's closure is the one that runs, so
+ * the guard reads current state and props directly:
+ *
+ *     useNavigationGuard(async () => {
+ *       if (!isDirty) return true
+ *       return await openConfirmDialog() // resolves with the user's answer
+ *     })
+ *
+ * Full reference: https://1gr14.dev/point0/latest/navigation
+ */
+export const useNavigationGuard = (guard: NavigationGuard): void => {
+  const guardRef = useRef(guard)
+  guardRef.current = guard
+  useEffect(() => registerNavigationGuard((props) => guardRef.current(props)), [])
+}
+
+// The instance guard (createNavigation's `guard` option, off the helpers) runs first, then the registered ones. A
+// literal `true` when there is no guard at all, so the caller can skip its `await` — even a resolved await defers the
+// navigation's start by a microtask. The set is snapshotted, so a guard that unregisters (or registers a neighbour)
+// mid-run can't skip or double-run the others.
+const runNavigationGuardsIfAny = (
+  props: NavigationGuardProps,
+  instanceGuard: NavigationGuard | undefined,
+): true | Promise<boolean> => {
+  if (!instanceGuard && navigationGuards.size === 0) {
+    return true
+  }
+  const guards = [...(instanceGuard ? [instanceGuard] : []), ...navigationGuards]
+  return (async () => {
+    for (const guard of guards) {
+      if (!(await guard(props))) {
+        return false
+      }
+    }
+    return true
+  })()
+}
+
 export const specialNavigationOptionsSymbols = {
   prefetchOnHover: Symbol('prefetchOnHover'),
   prefetch: Symbol('prefetch'),
@@ -886,8 +960,6 @@ export async function navigateWithTransitions<
     SpecialNavigateOptions<NavigateOptionsByAdapterNavigateFn<TAdapterNavigateFn>>
   ErrorClass?: TErrorClass
 }): NavigateWithTransitionsReturnType<TErrorClass> {
-  const navigateId = generateId()
-  _ss.__POINT0_CURRENT_NAVIGATE_ID__.set(navigateId)
   const helpers = getNavigationHelpers()
   const prevLocation = getLocation()
   const to = resolveNavigationTarget(providedTo, prevLocation)
@@ -914,6 +986,24 @@ export async function navigateWithTransitions<
   ) {
     return { location, error: undefined }
   }
+  // The guards' veto point: before the stale checks, the prefetch, any transition state, and the navigate-id claim —
+  // so a blocked (or still-asking) navigation leaves no trace, and an in-flight navigation it would otherwise have
+  // superseded keeps running. The size check keeps the guard-less navigation's start synchronous — even a resolved
+  // await defers the transition states by a microtask, which shifts what a same-tick render can observe. A block is
+  // answered like the other didn't-navigate outcomes (a redirect, a superseding navigate): a coded error in the
+  // result — an awaiting caller sees its navigation did not happen — created quietly, never thrown or logged here,
+  // because a guard saying no is the guard working, not a failure.
+  const guardsAnswer = runNavigationGuardsIfAny({ from: prevLocation, to: location }, helpers.guard)
+  if (guardsAnswer !== true && !(await guardsAnswer)) {
+    return {
+      location,
+      error: new ErrorClass('Navigation blocked by a navigation guard', {
+        code: POINT0_ERROR_CODES_MAP.NAVIGATION_BLOCKED,
+      }) as InstanceType<TErrorClass>,
+    }
+  }
+  const navigateId = generateId()
+  _ss.__POINT0_CURRENT_NAVIGATE_ID__.set(navigateId)
   // Deploy invalidation, the proactive branch: a newer client build was already noticed (via the
   // x-point0-client-build response header — see stale.ts), so don't even try to client-navigate with
   // the old chunks — leave with a full document navigation to the SAME target. `'error'` deliberately

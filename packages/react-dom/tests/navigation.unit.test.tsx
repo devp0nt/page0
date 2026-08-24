@@ -350,4 +350,13 @@ describe('createNavigation options (types)', () => {
     createNavigation({ routes, scrollToHash: 'push-hard' })
     expect(true).toBe(true)
   })
+
+  it('accepts a sync or async `guard`, on the options and on the Router prop', () => {
+    createNavigation({ routes, guard: ({ from, to }) => from.pathname === to.pathname })
+    const { Router } = createNavigation({ routes, guard: async () => Promise.resolve(true) })
+    void (<Router guard={({ to }) => to.pathname !== '/closed'} />)
+    // @ts-expect-error a guard must answer boolean, not void
+    createNavigation({ routes, guard: () => {} })
+    expect(true).toBe(true)
+  })
 })

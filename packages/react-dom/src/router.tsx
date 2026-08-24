@@ -26,6 +26,7 @@ import type {
   NavigateOptionsByAdapterNavigateFn,
   NavigateWithTransitionsReturnType,
   NavigationContextProviderProps,
+  NavigationGuard,
   OpenExternalFn,
   RedirectComponent,
   RedirectHelper,
@@ -1157,6 +1158,7 @@ export const createRouter = <
   openExternal,
   scrollToHash = true,
   stale,
+  guard: providedGuard,
   _navigate = createNavigate({ routes, navigate: providedNavigate, ErrorClass }),
   _redirect = createRedirectHelper({ routes, navigate: providedNavigate, ErrorClass }),
   _Redirect = createRedirectComponent({ routes, hook }),
@@ -1178,6 +1180,8 @@ export const createRouter = <
   scrollToHash?: ScrollToHashPolicy
   /** Stale-deploy reaction for client navigations — see {@link StalePolicy}. Default `'navigate'`. */
   stale?: StalePolicy
+  /** The instance navigation guard — see {@link registerNavigationGuard} for the contract. */
+  guard?: NavigationGuard
   _navigate?: NavigateHelper<TRoutes, AdapterNavigateFnByHook<TBaseLocationHook>, TErrorClass>
   _Redirect?: RedirectComponent<TRoutes, AdapterNavigateFnByHook<TBaseLocationHook>>
   _redirect?: RedirectHelper<TRoutes, AdapterNavigateFnByHook<TBaseLocationHook>>
@@ -1186,6 +1190,7 @@ export const createRouter = <
   ssrLocation?: AnyLocation | undefined
   Page404?: Page404Type
   layout404?: Layout404Type
+  guard?: NavigationGuard
 }) => React.ReactElement) => {
   function RouterRoutes({
     Page404,
@@ -1214,11 +1219,13 @@ export const createRouter = <
     ssrLocation = _ss.__POINT0_SSR_LOCATION__.get(),
     Page404 = ProvidedPage404,
     layout404 = providedLayout404,
+    guard = providedGuard,
   }: {
     children?: React.ReactNode
     ssrLocation?: AnyLocation | undefined
     Page404?: Page404Type
     layout404?: Layout404Type
+    guard?: NavigationGuard
   }) {
     const wouterSsrProps = useMemo(() => {
       if (env.side.is.client) {
@@ -1300,6 +1307,7 @@ export const createRouter = <
           openExternal={openExternal}
           scrollToHash={scrollToHash}
           stale={stale}
+          guard={guard}
         >
           <ScrollRestoration />
           {children ?? <RouterRoutes Page404={Page404} layout404={layout404} />}
@@ -1377,6 +1385,7 @@ export const createNavigation = <
   openExternal,
   scrollToHash,
   stale,
+  guard,
 }: {
   addHashToLocation?: boolean
   routes?: TRoutes
@@ -1404,6 +1413,18 @@ export const createNavigation = <
    * Full reference: https://1gr14.dev/point0/latest/navigation
    */
   stale?: StalePolicy
+  /**
+   * The instance navigation guard: every client navigation must pass it before anything runs — no prefetch, no
+   * transition state, no history write. May be async (show a dialog, resolve with the answer); `false` blocks the
+   * navigation with a `POINT0_NAVIGATION_BLOCKED`-coded error in its result. Also overridable per `<Router guard>`; for
+   * a guard tied to a component's lifetime use `useNavigationGuard` — see {@link registerNavigationGuard} for the full
+   * contract.
+   *
+   *     createNavigation({ routes, hook, guard: ({ to }) => to.pathname !== '/closed' })
+   *
+   * Full reference: https://1gr14.dev/point0/latest/navigation
+   */
+  guard?: NavigationGuard
 } = {}): {
   navigate: NavigateHelper<TRoutes, TAdapterNavigateFn, TErrorClass>
   Link: CreatedLink<TRoutes, TBaseLocationHook>
@@ -1414,6 +1435,7 @@ export const createNavigation = <
     ssrLocation?: AnyLocation | undefined
     Page404?: Page404Type
     layout404?: Layout404Type
+    guard?: NavigationGuard
   }) => React.ReactElement
   RouterRoutes: (props: {
     Page404?: Page404Type
@@ -1450,6 +1472,7 @@ export const createNavigation = <
       openExternal,
       scrollToHash,
       stale,
+      guard,
       _navigate: navigate,
       _redirect: redirect,
       _Redirect: Redirect,

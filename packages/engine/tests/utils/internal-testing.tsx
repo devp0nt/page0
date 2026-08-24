@@ -16,6 +16,7 @@ import nodePath from 'node:path'
 import type { RoutesPretty } from '@1gr14/route0'
 import { ClientPoints, Point0 } from '@point0/core'
 import type { AnyNiceReadyPoint } from '@point0/core'
+import type { NavigationGuard } from '@point0/core/navigation'
 import { createNavigation } from '@point0/react-dom/router'
 import { notifyManager } from '@tanstack/query-core'
 import { QueryClientProvider, type DehydratedState, type QueryClient } from '@tanstack/react-query'
@@ -366,6 +367,7 @@ export const createTestThings = async <TRoutes extends RoutesPretty>({
   Page404,
   layout404,
   routes,
+  guard,
 }: {
   wrapper?: React.ComponentType<{ children: React.ReactNode }>
   points?: PointsDefinition<any, any>
@@ -376,11 +378,12 @@ export const createTestThings = async <TRoutes extends RoutesPretty>({
   Page404?: React.ComponentType
   layout404?: Layout404Type
   routes?: TRoutes
+  guard?: NavigationGuard
 }): Promise<TestThings<TRoutes>> => {
   bindNotifyManager()
   const Wrapper = wrapper ?? undefined
   routes ??= ClientPoints.createFromDefintion(points).routes
-  const navigation = createNavigation({ routes, forceRerender: true, Page404, layout404 })
+  const navigation = createNavigation({ routes, forceRerender: true, Page404, layout404, guard })
   const { Router, RouterRoutes } = navigation
   const queryClient = createQueryClient()
   const app =

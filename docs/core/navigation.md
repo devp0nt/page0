@@ -472,6 +472,50 @@ const isNavigating = useIsNavigating()
 return <main className={isNavigating ? 'opacity-60' : ''}>{children}</main>
 ```
 
+## Guarding navigation: `useNavigationGuard`
+
+A guard is asked before a client navigation does anything — no prefetch, no
+transition state, no history write until it answers. Guards may be async: the
+navigation waits, so a guard can show a dialog and resolve with the user's
+answer. That is the whole "unsaved changes" pattern:
+
+```tsx
+import { useNavigationGuard } from '@point0/core/navigation'
+
+useNavigationGuard(async ({ from, to }) => {
+  if (!isDirty) return true
+  return await openConfirmDialog() // resolves true («leave») or false («stay»)
+})
+```
+
+`false` blocks the navigation the way the other didn't-navigate outcomes work —
+a `POINT0_NAVIGATION_BLOCKED`-coded error in the awaited result, never a thrown
+one:
+
+```tsx
+const result = await navigate('ideaView', { id })
+if (result.error?.code === 'POINT0_NAVIGATION_BLOCKED') {
+  // a guard said no — the user stayed
+}
+```
+
+The hook reads the latest render's closure (state and props work directly) and
+unregisters with its component. Outside React, `registerNavigationGuard(guard)`
+does the same and returns the unregister function. A guard that should hold
+every navigation of the app for its whole lifetime can instead be the `guard`
+option of `createNavigation` (or a `<Router guard>` prop); all layers run —
+instance guard first, then registered ones, in order, and the first `false`
+wins.
+
+Each guard receives `{ from, to }` — both full locations — and decides itself
+what counts as leaving; comparing `pathname`s is the usual move, so a
+search-only change stays free.
+
+> **GOTCHA:** guards cover the client navigation pipeline only. `setSearch` (a
+> "soft" URL update), browser back/forward (on `popstate` the URL has already
+> changed by the time anyone learns of it), and full unloads never pass through
+> — cover leaving the document with a `beforeunload` listener.
+
 ## Scroll restoration
 
 Scroll restoration is **split between the browser and Point0**, along the line
@@ -787,6 +831,7 @@ All optional except the need for routes (via `routes` or a prior
 | `addHashToLocation`              | `false`                    | Read `window.location.hash` into `location.hash` (client-only; off → `hash` is `''`) |
 | `openExternal`                   | `defaultOpenExternal`      | Hook for leaving the SPA (see below)                                                 |
 | `stale`                          | `'navigate'`               | Stale-deploy reaction: `'navigate'` / `'error'` / `'off'` / a custom fn (see above)  |
+| `guard`                          | —                          | The instance [navigation guard](#guarding-navigation-usenavigationguard)             |
 | `forceRerender`                  | `false`                    | Re-render routes on every location change                                            |
 | `prependRoutes` / `appendRoutes` | —                          | Extra routes injected at the tree root                                               |
 
@@ -794,9 +839,9 @@ All optional except the need for routes (via `routes` or a prior
 
 `navigate`, `Link`, `NavLink`, `Redirect`, `redirect`, `Router`, `RouterRoutes`,
 `useNavLink`, and `InferNavigation`. The location/search hooks (`useLocation`,
-`getLocation`, `useSearch`, `setSearch`, `useOnNavigate`, `useIsNavigating`)
-import directly from `@point0/core/navigation` — they aren't part of the
-returned object.
+`getLocation`, `useSearch`, `setSearch`, `useOnNavigate`, `useIsNavigating`,
+`useNavigationGuard`, `registerNavigationGuard`) import directly from
+`@point0/core/navigation` — they aren't part of the returned object.
 
 ### Leaving the SPA
 

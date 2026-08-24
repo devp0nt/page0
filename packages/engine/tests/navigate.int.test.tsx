@@ -1,7 +1,7 @@
 import { Routes } from '@1gr14/route0'
 import type { AnyLocation } from '@1gr14/route0'
 import { Point0 } from '@point0/core'
-import { useLocation, useOnNavigate } from '@point0/core/navigation'
+import { registerNavigationGuard, useLocation, useNavigationGuard, useOnNavigate } from '@point0/core/navigation'
 import { createNavigation } from '@point0/react-dom/router'
 import { describe, expect, it, setDefaultTimeout } from 'bun:test'
 import React, { useState } from 'react'
@@ -797,6 +797,138 @@ describe('navigate', () => {
     {
       retry: 3,
     },
+  )
+})
+
+describe('navigation guards', () => {
+  const sleep = async (ms: number) => await new Promise((resolve) => setTimeout(resolve, ms))
+
+  it(
+    'a guard answering false blocks the navigation, sees from/to, and unregistering frees it',
+    async () => {
+      const t = await createT()
+      await t.render(t.homePage.route(), async ({ waitContent, click }) => {
+        await waitContent('#home')
+        const seen: Array<{ from: string | undefined; to: string | undefined }> = []
+        const unregister = registerNavigationGuard(({ from, to }) => {
+          seen.push({ from: from.hrefRel, to: to.hrefRel })
+          return false
+        })
+        try {
+          await click('.link-about')
+          await sleep(200)
+          expect(window.document.querySelector('#about')).toBeNull()
+          expect(window.document.querySelector('#home')).not.toBeNull()
+          expect(seen).toEqual([{ from: '/', to: '/about' }])
+          // An awaiting caller learns its navigation did not happen — the same way as a superseding navigate.
+          const result = await t.navigate.to('/about')
+          expect(result.error?.code).toBe('POINT0_NAVIGATION_BLOCKED')
+        } finally {
+          unregister()
+        }
+        await click('.link-about')
+        await waitContent('#about')
+      })
+    },
+    { retry: 3 },
+  )
+
+  it(
+    'the createNavigation `guard` option holds every navigation of the instance',
+    async () => {
+      const root = Point0.lets('root', 'root')
+        .loading(() => <div id="loading">...</div>)
+        .error(({ error }) => <div id="error">{error.message}</div>)
+        .queryOptions({ retry: false })
+        .root()
+      let armed = true
+      const homePage = root.lets('page', 'home', '/').page(() => <div id="home">home</div>)
+      const aboutPage = root.lets('page', 'about', '/about').page(() => <div id="about">about</div>)
+      const t = await createTestThings({ ssr: true, points: [root, homePage, aboutPage], guard: () => !armed })
+      await t.render('/', async ({ waitContent }) => {
+        await waitContent('#home')
+        const blocked = await t.navigate.to('/about')
+        expect(blocked.error?.code).toBe('POINT0_NAVIGATION_BLOCKED')
+        expect(window.document.querySelector('#about')).toBeNull()
+        armed = false
+        await t.navigate.to('/about')
+        await waitContent('#about')
+      })
+    },
+    { retry: 3 },
+  )
+
+  it(
+    'an async guard parks the navigation until it resolves — the confirm-dialog flow',
+    async () => {
+      const t = await createT()
+      await t.render(t.homePage.route(), async ({ waitContent, click }) => {
+        await waitContent('#home')
+        let resolveAnswer: ((answer: boolean) => void) | undefined
+        const unregister = registerNavigationGuard(
+          async () =>
+            await new Promise<boolean>((resolve) => {
+              resolveAnswer = resolve
+            }),
+        )
+        try {
+          await click('.link-about')
+          await sleep(100)
+          // Parked while the "dialog" is open: nothing navigated, nothing errored.
+          expect(window.document.querySelector('#about')).toBeNull()
+          resolveAnswer?.(true)
+          await waitContent('#about')
+        } finally {
+          unregister()
+        }
+      })
+    },
+    { retry: 3 },
+  )
+
+  it(
+    'useNavigationGuard reads the latest render state and lives with its component',
+    async () => {
+      const root = Point0.lets('root', 'root')
+        .loading(() => <div id="loading">...</div>)
+        .error(({ error }) => <div id="error">{error.message}</div>)
+        .queryOptions({ retry: false })
+        .root()
+      const routes = Routes.create({ home: '/', about: '/about' })
+      const { NavLink } = createNavigation({ routes, forceRerender: true })
+      const layout = root.lets('layout', 'guard-layout').layout(({ children }) => {
+        const [armed, setArmed] = useState(false)
+        useNavigationGuard(() => !armed)
+        return (
+          <>
+            <button id="arm" onClick={() => setArmed(true)}>
+              arm
+            </button>
+            <button id="disarm" onClick={() => setArmed(false)}>
+              disarm
+            </button>
+            <NavLink route="about" className="link-about">
+              about
+            </NavLink>
+            {children}
+          </>
+        )
+      })
+      const homePage = layout.lets('page', 'home', '/').page(() => <div id="home">home</div>)
+      const aboutPage = layout.lets('page', 'about', '/about').page(() => <div id="about">about</div>)
+      const t = await createTestThings({ ssr: true, points: [root, layout, homePage, aboutPage] })
+      await t.render('/', async ({ waitContent, click }) => {
+        await waitContent('#home')
+        await click('#arm')
+        await click('.link-about')
+        await sleep(150)
+        expect(window.document.querySelector('#about')).toBeNull()
+        await click('#disarm')
+        await click('.link-about')
+        await waitContent('#about')
+      })
+    },
+    { retry: 3 },
   )
 })
 

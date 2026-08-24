@@ -5,6 +5,22 @@ release` promotes that section to the new version.
 
 ## Unreleased
 
+- **Navigation guards: ask before a client navigation runs.** A guard is asked
+  before anything happens — no prefetch, no transition state, no history write
+  until it answers — and may be async, so it can show a dialog and resolve with
+  the user's answer: the whole «unsaved changes» pattern in one hook. Register
+  app-wide via `createNavigation({ guard })` (overridable per `<Router guard>`),
+  or tie one to a component with `useNavigationGuard` /
+  `registerNavigationGuard` from `@point0/core/navigation`; the instance guard
+  runs first, then the registered ones, and the first `false` blocks the
+  navigation — answered like the other didn't-navigate outcomes, with a new
+  `POINT0_NAVIGATION_BLOCKED`-coded error in the awaited result, never a thrown
+  one. Guards receive `{ from, to }` and decide themselves what counts as
+  leaving (comparing `pathname`s is the usual move, so a search-only change
+  stays free). Out of scope by design: `setSearch`, browser back/forward
+  (`popstate` fires after the URL already changed) and full unloads — cover
+  leaving the document with `beforeunload`.
+
 ## 0.3.14 — 2026-08-21
 
 - **Docs: the benchmarks page is re-measured on Point0 0.3.13 and Bun 1.4.** The
